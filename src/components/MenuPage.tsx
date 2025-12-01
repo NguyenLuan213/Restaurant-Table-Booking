@@ -73,10 +73,10 @@ export default function MenuPage() {
     return menuItems.filter(item => {
       const matchesSearch =
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
-      return matchesSearch && matchesCategory;
-    });
+                         item.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
   }, [menuItems, searchTerm, activeCategory]);
 
   const MenuItemCard = ({ item }: { item: MenuItem }) => (
@@ -190,12 +190,12 @@ export default function MenuPage() {
               return (
                 <div className="mb-12" key={category.key}>
                   <h2 className="text-3xl mb-6">{category.label}</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {items.map(item => (
-                      <MenuItemCard key={item.id} item={item} />
-                    ))}
-                  </div>
-                </div>
+                  <MenuItemCard key={item.id} item={item} />
+                ))}
+              </div>
+            </div>
               );
             })}
           </TabsContent>
@@ -248,7 +248,7 @@ export default function MenuPage() {
         {!isLoading && !error && filteredItems.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">Không tìm thấy món ăn nào phù hợp với tìm kiếm của bạn.</p>
-          </div>
+        </div>
         )}
       </div>
     </div>

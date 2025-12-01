@@ -2,6 +2,7 @@ import express from 'express';
 import { getDatabase } from '../config/database.js';
 import { ObjectId } from 'mongodb';
 import { sendBookingConfirmationEmail } from '../services/emailService.js';
+import { verifyAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -9,7 +10,7 @@ const router = express.Router();
 router.post('/', async (req, res) => {
   try {
     const db = getDatabase();
-    const { name, email, phone, date, time, guests, diningPreference, tableId, tableNumber } = req.body;
+    const { name, email, phone, date, time, guests, diningPreference, tableId, tableNumber, note } = req.body;
 
     // Validate required fields
     if (!name || !email || !phone || !date || !time || !guests) {
@@ -27,6 +28,7 @@ router.post('/', async (req, res) => {
       tableId: tableId || null,
       tableNumber: tableNumber || null,
       status: 'confirmed',
+      note: note ? String(note).slice(0, 500) : '',
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -55,7 +57,7 @@ router.post('/', async (req, res) => {
 });
 
 // Lấy tất cả đặt bàn
-router.get('/', async (req, res) => {
+router.get('/', verifyAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     const bookings = await db.collection('bookings')
@@ -78,7 +80,7 @@ router.get('/', async (req, res) => {
 });
 
 // Lấy đặt bàn theo ngày
-router.get('/date/:date', async (req, res) => {
+router.get('/date/:date', verifyAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     const date = req.params.date;
@@ -102,7 +104,7 @@ router.get('/date/:date', async (req, res) => {
 });
 
 // Phân bàn cho đặt bàn
-router.put('/:id/assign-table', async (req, res) => {
+router.put('/:id/assign-table', verifyAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     const bookingId = req.params.id;
@@ -135,7 +137,7 @@ router.put('/:id/assign-table', async (req, res) => {
 });
 
 // Hủy phân bàn
-router.put('/:id/unassign-table', async (req, res) => {
+router.put('/:id/unassign-table', verifyAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     const bookingId = req.params.id;

@@ -1,10 +1,11 @@
 import express from 'express';
 import { getDatabase } from '../config/database.js';
+import { verifyAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // Lấy cài đặt
-router.get('/', async (req, res) => {
+router.get('/', verifyAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     const settings = await db.collection('settings').findOne({ type: 'restaurant' });
@@ -21,7 +22,7 @@ router.get('/', async (req, res) => {
 });
 
 // Cập nhật cài đặt
-router.put('/', async (req, res) => {
+router.put('/', verifyAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     const { settings, hours } = req.body;
@@ -62,7 +63,7 @@ router.put('/', async (req, res) => {
 });
 
 // Cập nhật sức chứa
-router.put('/capacity', async (req, res) => {
+router.put('/capacity', verifyAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     const { totalCapacity } = req.body;

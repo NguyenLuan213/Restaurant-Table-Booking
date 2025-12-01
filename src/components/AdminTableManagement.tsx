@@ -8,7 +8,7 @@ import { Switch } from './ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { toast } from 'sonner@2.0.3';
-import { buildApiUrl } from '../utils/api/config';
+import { useAuthFetch } from '../hooks/useAuthFetch';
 
 interface Table {
   id: string;
@@ -34,14 +34,16 @@ export default function AdminTableManagement() {
     description: ''
   });
 
+  const authFetch = useAuthFetch();
+
   useEffect(() => {
     fetchTables();
-  }, []);
+  }, [authFetch]);
 
   const fetchTables = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(buildApiUrl('/tables'));
+      const response = await authFetch('/tables');
 
       if (response.ok) {
         const data = await response.json();
@@ -59,18 +61,15 @@ export default function AdminTableManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-      if (!formData.tableNumber || !formData.capacity) {
+    if (!formData.tableNumber || !formData.capacity) {
       toast.error('Vui lòng điền đầy đủ các trường bắt buộc');
       return;
     }
 
     try {
       const method = editingTable ? 'PUT' : 'POST';
-      const url = editingTable
-        ? buildApiUrl(`/tables/${editingTable.id}`)
-        : buildApiUrl('/tables');
-
-      const response = await fetch(url, {
+      const endpoint = editingTable ? `/tables/${editingTable.id}` : '/tables';
+      const response = await authFetch(endpoint, {
         method,
         headers: {
           'Content-Type': 'application/json'
@@ -102,12 +101,9 @@ export default function AdminTableManagement() {
     if (!confirm('Bạn có chắc chắn muốn xóa bàn này?')) return;
 
     try {
-      const response = await fetch(
-        buildApiUrl(`/tables/${tableId}`),
-        {
-          method: 'DELETE'
-        }
-      );
+      const response = await authFetch(`/tables/${tableId}`, {
+        method: 'DELETE'
+      });
 
       if (response.ok) {
         toast.success('Xóa bàn thành công');
@@ -123,9 +119,7 @@ export default function AdminTableManagement() {
 
   const toggleAvailability = async (table: Table) => {
     try {
-      const response = await fetch(
-        buildApiUrl(`/tables/${table.id}`),
-        {
+      const response = await authFetch(`/tables/${table.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -134,8 +128,7 @@ export default function AdminTableManagement() {
             ...table,
             isAvailable: !table.isAvailable
           })
-        }
-      );
+      });
 
       if (response.ok) {
         toast.success(`Bàn đã ${table.isAvailable ? 'vô hiệu hóa' : 'kích hoạt'}`);
@@ -149,16 +142,13 @@ export default function AdminTableManagement() {
 
   const updateTotalCapacity = async () => {
     try {
-      const response = await fetch(
-        buildApiUrl('/settings/capacity'),
-        {
+      const response = await authFetch('/settings/capacity', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({ totalCapacity })
-        }
-      );
+      });
 
       if (response.ok) {
         toast.success('Cập nhật sức chứa thành công');

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner@2.0.3';
-import { buildApiUrl } from '../utils/api/config';
+import { useAuthFetch } from '../hooks/useAuthFetch';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface MenuItem {
@@ -48,14 +48,16 @@ export default function AdminMenuManagement() {
     isAvailable: true
   });
 
+  const authFetch = useAuthFetch();
+
   useEffect(() => {
     fetchMenuItems();
-  }, []);
+  }, [authFetch]);
 
   const fetchMenuItems = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(buildApiUrl('/menu'));
+      const response = await authFetch('/menu');
 
       if (response.ok) {
         const data = await response.json();
@@ -79,11 +81,8 @@ export default function AdminMenuManagement() {
 
     try {
       const method = editingItem ? 'PUT' : 'POST';
-      const url = editingItem
-        ? buildApiUrl(`/menu/${editingItem.id}`)
-        : buildApiUrl('/menu');
-
-      const response = await fetch(url, {
+      const endpoint = editingItem ? `/menu/${editingItem.id}` : '/menu';
+      const response = await authFetch(endpoint, {
         method,
         headers: {
           'Content-Type': 'application/json'
@@ -118,12 +117,9 @@ export default function AdminMenuManagement() {
     if (!confirm('Bạn có chắc chắn muốn xóa món ăn này?')) return;
 
     try {
-      const response = await fetch(
-        buildApiUrl(`/menu/${itemId}`),
-        {
-          method: 'DELETE'
-        }
-      );
+      const response = await authFetch(`/menu/${itemId}`, {
+        method: 'DELETE'
+      });
 
       if (response.ok) {
         toast.success('Xóa món ăn thành công');
@@ -139,9 +135,7 @@ export default function AdminMenuManagement() {
 
   const toggleAvailability = async (item: MenuItem) => {
     try {
-      const response = await fetch(
-        buildApiUrl(`/menu/${item.id}`),
-        {
+      const response = await authFetch(`/menu/${item.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -150,8 +144,7 @@ export default function AdminMenuManagement() {
             ...item,
             isAvailable: !item.isAvailable
           })
-        }
-      );
+      });
 
       if (response.ok) {
         toast.success(`${item.name} đã ${item.isAvailable ? 'đánh dấu không có sẵn' : 'đánh dấu có sẵn'}`);
@@ -340,10 +333,11 @@ export default function AdminMenuManagement() {
                   <Input
                     id="price"
                     type="number"
-                    step="0.01"
+                    min={0}
+                    step="1000"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    placeholder="ví dụ: 24.99"
+                    placeholder="ví dụ: 150000"
                     required
                   />
                 </div>

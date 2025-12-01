@@ -7,6 +7,7 @@ import tablesRouter from './routes/tables.js';
 import menuRouter from './routes/menu.js';
 import settingsRouter from './routes/settings.js';
 import availabilityRouter from './routes/availability.js';
+import authRouter from './routes/auth.js';
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes với prefix /api
+app.use('/api/auth', authRouter);
 app.use('/api/bookings', bookingsRouter);
 app.use('/api/tables', tablesRouter);
 app.use('/api/menu', menuRouter);

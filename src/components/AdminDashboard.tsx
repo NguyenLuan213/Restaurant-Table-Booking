@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Download, Calendar, Users, Clock, Mail, Phone, MapPin, RefreshCw } from 'lucide-react';
+import { Download, Calendar, Users, Clock, Mail, Phone, MapPin, RefreshCw, StickyNote } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { toast } from 'sonner@2.0.3';
-import { buildApiUrl } from '../utils/api/config';
+import { useAuthFetch } from '../hooks/useAuthFetch';
 
 interface Booking {
   id: string;
@@ -18,21 +18,23 @@ interface Booking {
   diningPreference: string;
   createdAt: string;
   status: string;
+  note?: string;
 }
 
 export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filterDate, setFilterDate] = useState('');
+  const authFetch = useAuthFetch();
 
   useEffect(() => {
     fetchBookings();
-  }, []);
+  }, [authFetch]);
 
   const fetchBookings = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(buildApiUrl('/bookings'));
+      const response = await authFetch('/bookings');
 
       if (response.ok) {
         const data = await response.json();
@@ -56,7 +58,7 @@ export default function AdminDashboard() {
     }
 
     // Create CSV content with all bookings
-    const headers = ['Mã đặt bàn', 'Họ và tên', 'Email', 'Điện thoại', 'Ngày', 'Giờ', 'Số khách', 'Sở thích chỗ ngồi', 'Trạng thái', 'Ngày tạo'];
+    const headers = ['Mã đặt bàn', 'Họ và tên', 'Email', 'Điện thoại', 'Ngày', 'Giờ', 'Số khách', 'Sở thích chỗ ngồi', 'Ghi chú', 'Trạng thái', 'Ngày tạo'];
     const rows = bookings.map(booking => [
       booking.id,
       booking.name,
@@ -66,6 +68,7 @@ export default function AdminDashboard() {
       booking.time,
       booking.guests,
       booking.diningPreference === 'indoor' ? 'Trong nhà' : 'Ngoài trời',
+      booking.note ? `"${booking.note.replace(/"/g, '""')}"` : '',
       booking.status,
       new Date(booking.createdAt).toLocaleString()
     ]);
@@ -101,9 +104,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      const response = await fetch(
-        buildApiUrl(`/bookings/date/${filterDate}`)
-      );
+      const response = await authFetch(`/bookings/date/${filterDate}`);
 
       if (response.ok) {
         const data = await response.json();
@@ -115,7 +116,7 @@ export default function AdminDashboard() {
         }
 
         // Create CSV for specific date
-        const headers = ['Mã đặt bàn', 'Họ và tên', 'Email', 'Điện thoại', 'Giờ', 'Số khách', 'Sở thích chỗ ngồi', 'Trạng thái'];
+        const headers = ['Mã đặt bàn', 'Họ và tên', 'Email', 'Điện thoại', 'Giờ', 'Số khách', 'Sở thích chỗ ngồi', 'Ghi chú', 'Trạng thái'];
         const rows = dateBookings.map((booking: Booking) => [
           booking.id,
           booking.name,
@@ -124,6 +125,7 @@ export default function AdminDashboard() {
           booking.time,
           booking.guests,
           booking.diningPreference === 'indoor' ? 'Trong nhà' : 'Ngoài trời',
+          booking.note ? `"${booking.note.replace(/"/g, '""')}"` : '',
           booking.status
         ]);
 
@@ -316,6 +318,12 @@ export default function AdminDashboard() {
                           <MapPin className="w-4 h-4 mr-2 text-amber-600" />
                           {booking.diningPreference === 'indoor' ? 'Trong nhà' : 'Ngoài trời'}
                         </div>
+                    {booking.note && (
+                      <div className="flex items-start mt-1 text-sm">
+                        <StickyNote className="w-4 h-4 mr-2 text-amber-600" />
+                        <span>{booking.note}</span>
+                      </div>
+                    )}
                       </div>
                       
                       <div>

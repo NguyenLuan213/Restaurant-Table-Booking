@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Users, Armchair, Edit2, X, Save, RefreshCw, Filter } from 'lucide-react';
+import { Calendar, Users, Armchair, Edit2, X, Save, RefreshCw, Filter, StickyNote } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { toast } from 'sonner@2.0.3';
-import { buildApiUrl } from '../utils/api/config';
+import { useAuthFetch } from '../hooks/useAuthFetch';
 
 interface Booking {
   id: string;
@@ -22,6 +22,7 @@ interface Booking {
   tableId?: string;
   tableNumber?: number;
   status: string;
+  note?: string;
 }
 
 interface Table {
@@ -45,27 +46,28 @@ export default function AdminTableAssignments() {
   const [newTableId, setNewTableId] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
 
+  const authFetch = useAuthFetch();
+
   useEffect(() => {
     fetchData();
-  }, [filterDate, rangeMode, startDate, endDate]);
+  }, [filterDate, rangeMode, startDate, endDate, authFetch]);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
       // Fetch bookings
-      const bookingsResponse = await fetch(
-        rangeMode === 'day'
-          ? buildApiUrl(`/bookings/date/${filterDate}`)
-          : buildApiUrl('/bookings')
-      );
+      const bookingsEndpoint = rangeMode === 'day'
+        ? `/bookings/date/${filterDate}`
+        : '/bookings';
+      const bookingsResponse = await authFetch(bookingsEndpoint);
 
       // Fetch tables
-      const tablesResponse = await fetch(buildApiUrl('/tables'));
+      const tablesResponse = await authFetch('/tables');
 
       if (bookingsResponse.ok && tablesResponse.ok) {
         const bookingsData = await bookingsResponse.json();
         const tablesData = await tablesResponse.json();
-
+        
         let list: Booking[] = bookingsData.bookings || [];
 
         const normalize = (value: string) => {
@@ -118,9 +120,7 @@ export default function AdminTableAssignments() {
     try {
       const selectedTable = tables.find(t => t.id === newTableId);
       
-      const response = await fetch(
-        buildApiUrl(`/bookings/${selectedBooking.id}/assign-table`),
-        {
+      const response = await authFetch(`/bookings/${selectedBooking.id}/assign-table`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -129,8 +129,7 @@ export default function AdminTableAssignments() {
             tableId: newTableId,
             tableNumber: selectedTable?.tableNumber
           })
-        }
-      );
+      });
 
       if (response.ok) {
         toast.success('Phân bàn thành công');
@@ -151,12 +150,9 @@ export default function AdminTableAssignments() {
     if (!confirm('Xóa phân bàn khỏi đặt bàn này?')) return;
 
     try {
-      const response = await fetch(
-        buildApiUrl(`/bookings/${bookingId}/unassign-table`),
-        {
-          method: 'PUT'
-        }
-      );
+      const response = await authFetch(`/bookings/${bookingId}/unassign-table`, {
+        method: 'PUT'
+      });
 
       if (response.ok) {
         toast.success('Hủy phân bàn thành công');
@@ -201,6 +197,42 @@ export default function AdminTableAssignments() {
   };
 
   const tableAssignments = getTableAssignments();
+
+  const getEarliestAssignmentTime = (assignments: Booking[]): number | null => {
+    if (!assignments.length) return null;
+    let min = Number.MAX_SAFE_INTEGER;
+    for (const b of assignments) {
+      // date dạng YYYY-MM-DD, time dạng '6:00 PM' -> ghép lại thành Date
+      const dt = new Date(`${b.date} ${b.time}`);
+      const t = dt.getTime();
+      if (!Number.isNaN(t) && t < min) {
+        min = t;
+      }
+    }
+    return min === Number.MAX_SAFE_INTEGER ? null : min;
+  };
+
+  // Sắp xếp: bàn có khách trước, rồi theo thời gian đặt sớm nhất, cuối cùng theo số bàn
+  const sortedTables = [...tables].sort((a, b) => {
+    const aAssignments = tableAssignments[a.id] || [];
+    const bAssignments = tableAssignments[b.id] || [];
+    const aOccupied = aAssignments.length > 0;
+    const bOccupied = bAssignments.length > 0;
+
+    if (aOccupied !== bOccupied) {
+      return aOccupied ? -1 : 1; // đã có khách lên đầu
+    }
+
+    const aTime = getEarliestAssignmentTime(aAssignments);
+    const bTime = getEarliestAssignmentTime(bAssignments);
+
+    if (aTime !== null && bTime !== null && aTime !== bTime) {
+      return aTime - bTime; // thời gian sớm hơn trước
+    }
+
+    // Nếu cùng trạng thái / không có thời gian, sắp theo số bàn
+    return a.tableNumber - b.tableNumber;
+  });
   const unassignedBookings = bookings.filter(b => !b.tableId);
 
   return (
@@ -247,12 +279,12 @@ export default function AdminTableAssignments() {
           </div>
 
           {rangeMode === 'day' && (
-            <Input
-              id="filterDate"
-              type="date"
-              value={filterDate}
-              onChange={(e) => setFilterDate(e.target.value)}
-            />
+          <Input
+            id="filterDate"
+            type="date"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+          />
           )}
 
           {rangeMode === 'range' && (
@@ -392,6 +424,12 @@ export default function AdminTableAssignments() {
                                   • {booking.guests} khách • {booking.diningPreference === 'indoor' ? 'Trong nhà' : 'Ngoài trời'}
                                 </div>
                                 <div>{booking.email} • {booking.phone}</div>
+                                {booking.note && (
+                                  <div className="flex items-start text-sm text-amber-800">
+                                    <StickyNote className="w-3.5 h-3.5 mr-1 mt-0.5" />
+                                    <span className="break-words">{booking.note}</span>
+                                  </div>
+                                )}
                               </div>
                             </div>
                             <Button
@@ -434,6 +472,12 @@ export default function AdminTableAssignments() {
                             <div className="text-sm text-gray-600 space-y-1">
                               <div>{booking.date} • {booking.time} • {booking.guests} khách • {booking.diningPreference === 'indoor' ? 'Trong nhà' : 'Ngoài trời'}</div>
                               <div>{booking.email} • {booking.phone}</div>
+                              {booking.note && (
+                                <div className="flex items-start text-sm text-amber-800">
+                                  <StickyNote className="w-3.5 h-3.5 mr-1 mt-0.5" />
+                                  <span className="break-words">{booking.note}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className="flex gap-2">
@@ -463,7 +507,7 @@ export default function AdminTableAssignments() {
           ) : (
             /* Grid View - Table Layout (reuse style from AdminTableManagement) */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-              {tables.map((table) => {
+              {sortedTables.map((table) => {
                 const assignments = tableAssignments[table.id] || [];
                 const isOccupied = assignments.length > 0;
 
@@ -482,7 +526,7 @@ export default function AdminTableAssignments() {
                         <p className="text-sm text-gray-600">
                           {table.capacity} chỗ • {table.location === 'indoor' ? 'Trong nhà' : 'Ngoài trời'}
                         </p>
-                      </div>
+                        </div>
                       <div
                         className={`px-2 py-1 rounded text-xs ${
                           isOccupied ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-900'
@@ -490,11 +534,11 @@ export default function AdminTableAssignments() {
                       >
                         {isOccupied ? 'Đã có khách' : 'Có sẵn'}
                       </div>
-                    </div>
+                      </div>
 
-                    {assignments.length > 0 ? (
-                      <div className="space-y-2">
-                        {assignments.map((booking) => (
+                      {assignments.length > 0 ? (
+                        <div className="space-y-2">
+                          {assignments.map((booking) => (
                           <div
                             key={booking.id}
                             className="bg-white/70 border border-green-200 rounded-lg p-2 text-sm text-gray-700"
@@ -511,32 +555,38 @@ export default function AdminTableAssignments() {
                               </span>
                               • {booking.guests} khách • {booking.diningPreference === 'indoor' ? 'Trong nhà' : 'Ngoài trời'}
                             </div>
+                            {booking.note && (
+                              <div className="flex items-start text-xs text-amber-800 mb-1">
+                                <StickyNote className="w-3.5 h-3.5 mr-1 mt-0.5" />
+                                <span className="break-words">{booking.note}</span>
+                              </div>
+                            )}
                             <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => openAssignDialog(booking)}
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => openAssignDialog(booking)}
                                 className="flex-1 h-8 text-xs"
-                              >
+                                >
                                 Đổi
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleUnassignTable(booking.id)}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleUnassignTable(booking.id)}
                                 className="h-8 text-xs text-red-600"
-                              >
+                                >
                                 Xóa
-                              </Button>
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
+                          ))}
+                        </div>
+                      ) : (
                       <div className="text-sm text-gray-400 text-center py-4">
                         Không có đặt bàn
-                      </div>
-                    )}
+                        </div>
+                      )}
                   </div>
                 );
               })}
@@ -569,6 +619,12 @@ export default function AdminTableAssignments() {
                     • {selectedBooking.guests} khách
                   </div>
                   <div>Sở thích: {selectedBooking.diningPreference === 'indoor' ? 'Trong nhà' : 'Ngoài trời'}</div>
+                  {selectedBooking.note && (
+                    <div className="flex items-start text-sm text-amber-800">
+                      <StickyNote className="w-3.5 h-3.5 mr-1 mt-0.5" />
+                      <span className="break-words">{selectedBooking.note}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

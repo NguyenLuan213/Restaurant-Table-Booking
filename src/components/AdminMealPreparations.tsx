@@ -7,7 +7,7 @@ import { Label } from './ui/label';
 import { Badge } from './ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { toast } from 'sonner@2.0.3';
-import { buildApiUrl } from '../utils/api/config';
+import { useAuthFetch } from '../hooks/useAuthFetch';
 
 interface MenuItem {
   id: string;
@@ -29,6 +29,7 @@ interface Booking {
   guests: number;
   tableNumber: number;
   selectedMeals: SelectedMeal[];
+  note?: string;
 }
 
 interface MealPreparation {
@@ -52,6 +53,7 @@ export default function AdminMealPreparations() {
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
   const [preparations, setPreparations] = useState<MealPreparation[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const authFetch = useAuthFetch();
 
   const calculatePreparations = (bookingsData: Booking[], menuData: MenuItem[]) => {
     const prepMap: { [key: string]: MealPreparation } = {};
@@ -93,14 +95,10 @@ export default function AdminMealPreparations() {
     setIsLoading(true);
     try {
       // Fetch bookings for the date
-      const bookingsResponse = await fetch(
-        buildApiUrl(`/bookings/date/${filterDate}`)
-      );
+      const bookingsResponse = await authFetch(`/bookings/date/${filterDate}`);
 
       // Fetch menu items
-      const menuResponse = await fetch(
-        buildApiUrl('/menu')
-      );
+      const menuResponse = await authFetch('/menu');
 
       if (bookingsResponse.ok && menuResponse.ok) {
         const bookingsData = await bookingsResponse.json();
@@ -125,8 +123,7 @@ export default function AdminMealPreparations() {
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterDate]);
+  }, [filterDate, authFetch]);
 
   const filteredPreparations = activeCategory === 'all'
     ? preparations

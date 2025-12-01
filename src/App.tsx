@@ -13,6 +13,8 @@ import AdminTableAssignments from './components/AdminTableAssignments';
 import AdminMenuManagement from './components/AdminMenuManagement';
 import AdminAnalytics from './components/AdminAnalytics';
 import AdminSettings from './components/AdminSettings';
+import AdminLoginPage from './components/AdminLoginPage';
+import { AdminGuard } from './components/AdminGuard';
 
 function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -121,8 +123,17 @@ export default function App() {
           </div>
         } />
 
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+
         {/* Admin Routes */}
-        <Route path="/admin" element={<AdminLayout />}>
+        <Route
+          path="/admin"
+          element={
+            <AdminGuard>
+              <AdminLayout />
+            </AdminGuard>
+          }
+        >
           <Route index element={<AdminDashboard />} />
           <Route path="tables" element={<AdminTableManagement />} />
           <Route path="table-assignments" element={<AdminTableAssignments />} />

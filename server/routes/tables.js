@@ -1,11 +1,12 @@
 import express from 'express';
 import { getDatabase } from '../config/database.js';
 import { ObjectId } from 'mongodb';
+import { verifyAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // Lấy tất cả bàn
-router.get('/', async (req, res) => {
+router.get('/', verifyAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     const tables = await db.collection('tables')
@@ -37,7 +38,7 @@ router.get('/', async (req, res) => {
 });
 
 // Tạo bàn mới
-router.post('/', async (req, res) => {
+router.post('/', verifyAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     const { tableNumber, capacity, location, isAvailable, description } = req.body;
@@ -75,7 +76,7 @@ router.post('/', async (req, res) => {
 });
 
 // Cập nhật bàn
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     const tableId = req.params.id;
@@ -105,7 +106,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Xóa bàn
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     const tableId = req.params.id;

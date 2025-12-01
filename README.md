@@ -5,6 +5,7 @@ Website đặt bàn và quản trị nhà hàng: trải nghiệm người dùng 
 ## 1. Tính năng nổi bật
 - Đặt bàn online (chọn ngày/giờ, sở thích chỗ ngồi, xuất CSV).
 - Quy trình chọn bàn chi tiết, phân bàn tự động/manual trong trang Admin.
+- Khu vực admin có đăng nhập bảo vệ (JWT + MongoDB), tự động hết hạn sau 8 giờ.
 - Quản lý thực đơn, bàn, phân công bàn, phân tích số liệu, cài đặt nhà hàng.
 - Backend riêng với MongoDB, hỗ trợ gửi email xác nhận (SMTP tùy chọn).
 
@@ -39,6 +40,7 @@ MONGODB_URI=mongodb://localhost:27017
 DATABASE_NAME=restaurant_db
 PORT=5000
 CORS_ORIGIN=http://localhost:3000
+JWT_SECRET=change_me_to_a_secure_key
 # SMTP (tuỳ chọn để gửi email)
 SMTP_HOST=smtp.example.com
 SMTP_PORT=587
@@ -51,6 +53,14 @@ npm run dev            # chạy server
 ```
 Lưu ý: nếu muốn seed dữ liệu mẫu chạy `npm run seed`, tạo index `npm run indexes`.
 
+### Đăng nhập khu vực Admin
+- Sau khi chạy `npm run seed`, hệ thống tạo tài khoản mặc định:
+  - Email: `admin@auradining.vn`
+  - Mật khẩu: `AuraDining@2025`
+- Đăng nhập tại `http://localhost:3000/admin/login`.
+- Sau khi đăng nhập thành công bạn sẽ được chuyển vào bảng điều khiển và token được lưu trong LocalStorage (hết hạn sau 8 giờ hoặc khi đăng xuất).
+- Hãy đổi mật khẩu ngay khi lên môi trường thật bằng cách cập nhật document trong collection `admin_users` (hoặc viết form riêng).
+
 ## 4. Scripts chính
 | Vị trí | Lệnh | Mô tả |
 |-------|------|-------|
@@ -58,7 +68,7 @@ Lưu ý: nếu muốn seed dữ liệu mẫu chạy `npm run seed`, tạo index 
 | `/` | `npm run build` | Build frontend |
 | `/` | `npm run preview` | Preview build |
 | `/server` | `npm run dev` | Node --watch backend |
-| `/server` | `npm run seed` | Seed dữ liệu mẫu MongoDB |
+| `/server` | `npm run seed` | Seed dữ liệu mẫu MongoDB (bàn, món, settings & tài khoản admin) |
 | `/server` | `npm run indexes` | Tạo index MongoDB |
 
 ## 5. Gửi email xác nhận

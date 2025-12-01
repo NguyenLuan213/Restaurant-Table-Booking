@@ -1,8 +1,17 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Utensils, Settings, TrendingUp, TableProperties, ClipboardList } from 'lucide-react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Utensils, Settings, TrendingUp, TableProperties, ClipboardList, LogOut } from 'lucide-react';
+import { useAdminAuth } from '../context/AdminAuthContext';
+import { Button } from './ui/button';
 
 export default function AdminLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { admin, logout } = useAdminAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/admin/login', { replace: true });
+  };
 
   const navItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'Bảng điều khiển' },
@@ -28,12 +37,29 @@ export default function AdminLayout() {
                 <p className="text-xs text-gray-500">Quản lý nhà hàng</p>
               </div>
             </div>
+            <div className="flex items-center gap-4">
+              {admin && (
+                <div className="text-right">
+                  <p className="text-sm font-medium">{admin.name}</p>
+                  <p className="text-xs text-gray-500">{admin.email}</p>
+                </div>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Đăng xuất
+              </Button>
             <Link
               to="/"
               className="text-sm text-gray-600 hover:text-amber-600 transition-colors"
             >
-              Về trang web
+                Về trang web
             </Link>
+            </div>
           </div>
         </div>
       </div>

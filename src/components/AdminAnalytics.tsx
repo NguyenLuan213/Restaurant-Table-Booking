@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend } from 'recharts';
 import { toast } from 'sonner@2.0.3';
-import { buildApiUrl } from '../utils/api/config';
+import { useAuthFetch } from '../hooks/useAuthFetch';
 
 interface Booking {
   id: string;
@@ -13,6 +13,7 @@ interface Booking {
   guests: number;
   diningPreference: string;
   createdAt: string;
+  note?: string;
 }
 
 interface AnalyticsData {
@@ -35,15 +36,16 @@ export default function AdminAnalytics() {
   const [isLoading, setIsLoading] = useState(false);
   const [dateRange, setDateRange] = useState('7'); // days
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const authFetch = useAuthFetch();
 
   useEffect(() => {
     fetchAnalytics();
-  }, [dateRange]);
+  }, [dateRange, authFetch]);
 
   const fetchAnalytics = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(buildApiUrl('/bookings'));
+      const response = await authFetch('/bookings');
 
       if (response.ok) {
         const data = await response.json();

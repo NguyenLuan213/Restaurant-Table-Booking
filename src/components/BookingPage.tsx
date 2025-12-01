@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Calendar, Clock, Users, MapPin, Check, Utensils, Download } from 'lucide-react';
+import { Calendar, Clock, Users, MapPin, Check, Utensils, Download, StickyNote } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -7,6 +7,7 @@ import { Label } from './ui/label';
 import { Calendar as CalendarComponent } from './ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Textarea } from './ui/textarea';
 import { motion } from 'motion/react';
 import { toast } from 'sonner@2.0.3';
 import { buildApiUrl } from '../utils/api/config';
@@ -19,6 +20,7 @@ export default function BookingPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [note, setNote] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [bookingId, setBookingId] = useState('');
   const [availability, setAvailability] = useState<{
@@ -110,7 +112,8 @@ export default function BookingPage() {
             date: date.toISOString().split('T')[0],
             time,
             guests,
-            diningPreference
+            diningPreference,
+            note: note.trim()
           })
         }
       );
@@ -151,10 +154,10 @@ export default function BookingPage() {
     const { toPng } = await import('html-to-image');
     try {
       const dataUrl = await toPng(summary);
-      const link = document.createElement('a');
+    const link = document.createElement('a');
       link.href = dataUrl;
       link.download = `AuraDining_Booking_${bookingId || Date.now()}.png`;
-      link.click();
+    link.click();
       toast.success('Đã tải ảnh chi tiết đặt bàn!');
     } catch (error) {
       console.error('Failed to download image', error);
@@ -200,6 +203,12 @@ export default function BookingPage() {
                       <MapPin className="w-5 h-5 mr-3 text-amber-600" />
                       <span>{diningPreference === 'indoor' ? 'Trong nhà' : 'Ngoài trời'}</span>
                     </div>
+                  {note && (
+                    <div className="flex items-start">
+                      <StickyNote className="w-5 h-5 mr-3 text-amber-600 mt-0.5" />
+                      <span>{note}</span>
+                    </div>
+                  )}
                   </div>
                 </div>
 
@@ -411,6 +420,17 @@ export default function BookingPage() {
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           required
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="note">Ghi chú (tuỳ chọn)</Label>
+                        <Textarea
+                          id="note"
+                          placeholder="Ví dụ: cần ghế trẻ em, dị ứng với hải sản..."
+                          value={note}
+                          onChange={(e) => setNote(e.target.value)}
+                          rows={3}
                         />
                       </div>
                     </div>

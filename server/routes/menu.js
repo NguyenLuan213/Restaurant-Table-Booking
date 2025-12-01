@@ -1,6 +1,7 @@
 import express from 'express';
 import { getDatabase } from '../config/database.js';
 import { ObjectId } from 'mongodb';
+import { verifyAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -34,7 +35,7 @@ router.get('/', async (req, res) => {
 });
 
 // Tạo món ăn mới
-router.post('/', async (req, res) => {
+router.post('/', verifyAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     const { name, description, price, image, category, isVeg, isChefSpecial, isAvailable } = req.body;
@@ -75,7 +76,7 @@ router.post('/', async (req, res) => {
 });
 
 // Cập nhật món ăn
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     const menuId = req.params.id;
@@ -110,7 +111,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Xóa món ăn
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyAdmin, async (req, res) => {
   try {
     const db = getDatabase();
     const menuId = req.params.id;

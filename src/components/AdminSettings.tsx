@@ -7,7 +7,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Separator } from './ui/separator';
 import { toast } from 'sonner@2.0.3';
-import { buildApiUrl } from '../utils/api/config';
+import { useAuthFetch } from '../hooks/useAuthFetch';
 
 interface RestaurantSettings {
   restaurantName: string;
@@ -42,41 +42,42 @@ const defaultHours: OperatingHours[] = [
 export default function AdminSettings() {
   const [settings, setSettings] = useState<RestaurantSettings>({
     restaurantName: 'Aura Dining',
-    email: 'hello@labella.com',
-    phone: '(555) 123-4567',
+    email: 'hello@auradining.vn',
+    phone: '(+84) 236 123 4567',
     address: '15 Đ. 2 Tháng 9',
     city: 'Đà Nẵng',
     state: 'Việt Nam',
-    zipCode: '50000',
-    description: 'Experience fine dining at its best. Fresh ingredients, authentic flavors, unforgettable moments.',
-    emailTemplate: `Dear {customerName},
+    zipCode: '',
+    description: 'Trải nghiệm ẩm thực tinh tế giữa lòng Đà Nẵng. Nguyên liệu tươi, gia vị bản địa và dịch vụ tận tâm.',
+    emailTemplate: `Kính chào {customerName},
 
-Thank you for booking a table at {restaurantName}!
+Cảm ơn bạn đã đặt bàn tại {restaurantName}!
 
-Booking Details:
-- Date: {date}
-- Time: {time}
-- Party Size: {guests} guests
-- Seating: {diningPreference}
+Chi tiết đặt bàn:
+- Ngày: {date}
+- Giờ: {time}
+- Số khách: {guests} khách
+- Vị trí ngồi: {diningPreference}
 
-We look forward to serving you!
+Chúng tôi rất mong được phục vụ bạn.
 
-Best regards,
-{restaurantName} Team`,
-    smsTemplate: 'Hi {customerName}! Your table at {restaurantName} is confirmed for {date} at {time} for {guests} guests. See you soon!'
+Trân trọng,
+Đội ngũ {restaurantName}`,
+    smsTemplate: 'Aura Dining xin xác nhận bàn của {customerName} vào {date} lúc {time} cho {guests} khách. Hẹn gặp bạn!'
   });
 
   const [hours, setHours] = useState<OperatingHours[]>(defaultHours);
   const [isLoading, setIsLoading] = useState(false);
+  const authFetch = useAuthFetch();
 
   useEffect(() => {
     fetchSettings();
-  }, []);
+  }, [authFetch]);
 
   const fetchSettings = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(buildApiUrl('/settings'));
+      const response = await authFetch('/settings');
 
       if (response.ok) {
         const data = await response.json();
@@ -97,16 +98,13 @@ Best regards,
   const handleSaveSettings = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        buildApiUrl('/settings'),
-        {
+      const response = await authFetch('/settings', {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({ settings, hours })
-        }
-      );
+      });
 
       if (response.ok) {
         toast.success('Lưu cài đặt thành công!');

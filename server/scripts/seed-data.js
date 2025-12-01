@@ -1,5 +1,6 @@
-import { connectDatabase, getDatabase } from '../config/database.js';
+import { connectDatabase } from '../config/database.js';
 import dotenv from 'dotenv';
+import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
@@ -15,9 +16,9 @@ const sampleTables = [
 
 const sampleMenuItems = [
   {
-    name: 'Salad Caesar',
+    name: 'Salad Caesar Aura',
     description: 'Rau xà lách tươi, phô mai parmesan, bánh mì nướng và sốt Caesar đặc biệt',
-    price: 12,
+    price: 120000,
     image: 'https://images.unsplash.com/photo-1739436776460-35f309e3f887?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYWVzYXIlMjBzYWxhZCUyMGZyZXNofGVufDF8fHx8MTc2NDM2MjExMXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
     category: 'starters',
     isVeg: true,
@@ -27,7 +28,7 @@ const sampleMenuItems = [
   {
     name: 'Pasta Nấm Truffle',
     description: 'Pasta tươi với nấm truffle đen, nấm rừng và phô mai parmesan trong sốt kem',
-    price: 32,
+    price: 320000,
     image: 'https://images.unsplash.com/photo-1676300184847-4ee4030409c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwYXN0YSUyMGRpc2glMjBnb3VybWV0fGVufDF8fHx8MTc2NDMwMzU1M3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
     category: 'mains',
     isVeg: true,
@@ -37,7 +38,7 @@ const sampleMenuItems = [
   {
     name: 'Bánh Chocolate Lava',
     description: 'Bánh chocolate ấm với nhân tan chảy, kem vani và mứt quả mọng',
-    price: 12,
+    price: 145000,
     image: 'https://images.unsplash.com/photo-1607257882338-70f7dd2ae344?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZXNzZXJ0JTIwY2hvY29sYXRlJTIwY2FrZXxlbnwxfHx8fDE3NjQzMTIzODZ8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
     category: 'desserts',
     isVeg: true,
@@ -48,13 +49,13 @@ const sampleMenuItems = [
 
 const defaultSettings = {
   restaurantName: 'Aura Dining',
-  email: 'hello@labella.com',
-  phone: '(555) 123-4567',
-  address: '123 Culinary Street',
-  city: 'New York',
-  state: 'NY',
-  zipCode: '10001',
-  description: 'Trải nghiệm ẩm thực đẳng cấp. Nguyên liệu tươi ngon, hương vị chân thực, khoảnh khắc khó quên.',
+  email: 'hello@auradining.vn',
+  phone: '(+84) 236 123 4567',
+  address: '15 Đ. 2 Tháng 9',
+  city: 'Đà Nẵng',
+  state: 'Việt Nam',
+  zipCode: '',
+  description: 'Trải nghiệm ẩm thực đẳng cấp giữa lòng Đà Nẵng. Hương vị tinh tế, dịch vụ tận tâm.',
   totalCapacity: 50,
   emailTemplate: `Kính chào {customerName},
 
@@ -82,6 +83,12 @@ const defaultHours = [
   { day: 'Saturday', openTime: '11:00', closeTime: '23:00', isClosed: false },
   { day: 'Sunday', openTime: '10:00', closeTime: '21:00', isClosed: false }
 ];
+
+const defaultAdmin = {
+  name: 'Aura Admin',
+  email: 'admin@auradining.vn',
+  password: '123456'
+};
 
 async function seedDatabase() {
   try {
@@ -144,6 +151,24 @@ async function seedDatabase() {
       { upsert: true }
     );
     console.log('✅ Đã tạo giờ mở cửa mặc định');
+
+    // Seed admin user
+    console.log('👤 Đang kiểm tra tài khoản admin...');
+    const adminCollection = db.collection('admin_users');
+    const existingAdmin = await adminCollection.findOne({ email: defaultAdmin.email });
+    if (!existingAdmin) {
+      const passwordHash = await bcrypt.hash(defaultAdmin.password, 10);
+      await adminCollection.insertOne({
+        name: defaultAdmin.name,
+        email: defaultAdmin.email,
+        passwordHash,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      console.log(`✅ Đã tạo tài khoản admin mặc định (${defaultAdmin.email})`);
+    } else {
+      console.log('ℹ️  Tài khoản admin đã tồn tại, bỏ qua seed admin');
+    }
 
     console.log('\n🎉 Seed database hoàn tất!');
     process.exit(0);

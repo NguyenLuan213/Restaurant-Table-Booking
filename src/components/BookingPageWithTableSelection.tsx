@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, MapPin, Check, Utensils, Download, Armchair } from 'lucide-react';
+import { Calendar, Clock, Users, MapPin, Check, Utensils, Download, Armchair, StickyNote } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
@@ -8,6 +8,7 @@ import { Calendar as CalendarComponent } from './ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Badge } from './ui/badge';
+import { Textarea } from './ui/textarea';
 import { motion } from 'motion/react';
 import { toast } from 'sonner@2.0.3';
 import { buildApiUrl } from '../utils/api/config';
@@ -32,6 +33,7 @@ export default function BookingPageWithTableSelection() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [note, setNote] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [bookingId, setBookingId] = useState('');
   const [availableTables, setAvailableTables] = useState<Table[]>([]);
@@ -119,7 +121,8 @@ export default function BookingPageWithTableSelection() {
             guests: parseInt(guests),
             diningPreference,
             tableId: selectedTable.id,
-            tableNumber: selectedTable.tableNumber
+            tableNumber: selectedTable.tableNumber,
+            note: note.trim()
           })
         }
       );
@@ -159,10 +162,10 @@ export default function BookingPageWithTableSelection() {
     const { toPng } = await import('html-to-image');
     try {
       const dataUrl = await toPng(summary);
-      const link = document.createElement('a');
+    const link = document.createElement('a');
       link.href = dataUrl;
       link.download = `AuraDining_Booking_${bookingId || Date.now()}.png`;
-      link.click();
+    link.click();
       toast.success('Đã tải ảnh chi tiết đặt bàn!');
     } catch (error) {
       console.error('Failed to download image', error);
@@ -212,6 +215,12 @@ export default function BookingPageWithTableSelection() {
                       <MapPin className="w-5 h-5 mr-3 text-amber-600" />
                       <span>{diningPreference === 'indoor' ? 'Trong nhà' : 'Ngoài trời'}</span>
                     </div>
+                    {note && (
+                      <div className="flex items-start">
+                        <StickyNote className="w-5 h-5 mr-3 text-amber-600 mt-0.5" />
+                        <span>{note}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -491,6 +500,17 @@ export default function BookingPageWithTableSelection() {
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+84 123 456 789"
                     required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="note">Ghi chú (tuỳ chọn)</Label>
+                  <Textarea
+                    id="note"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Ví dụ: dị ứng hải sản, cần không gian riêng..."
+                    rows={3}
                   />
                 </div>
 
