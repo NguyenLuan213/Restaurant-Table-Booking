@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Leaf, Star, Search } from 'lucide-react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
+import { Leaf, Star, Search, X } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
@@ -141,15 +141,29 @@ export default function MenuPage() {
 
           {/* Search Bar */}
           <div className="max-w-md mx-auto relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
             <Input
               type="text"
               placeholder="Tìm kiếm món ăn..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 pr-10"
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Xóa tìm kiếm"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
+          {searchTerm && (
+            <p className="text-sm text-gray-500 mt-2">
+              Tìm thấy {filteredItems.length} món ăn phù hợp với "{searchTerm}"
+            </p>
+          )}
         </div>
 
         {/* Legend */}
@@ -185,7 +199,7 @@ export default function MenuPage() {
 
           <TabsContent value="all" className="mt-0">
             {categories.map(category => {
-              const items = menuItems.filter(item => item.category === category.key);
+              const items = filteredItems.filter(item => item.category === category.key);
               if (items.length === 0) return null;
               return (
                 <div className="mb-12" key={category.key}>
@@ -202,34 +216,62 @@ export default function MenuPage() {
 
           <TabsContent value="starters" className="mt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredItems.filter(item => item.category === 'starters').map(item => (
-                <MenuItemCard key={item.id} item={item} />
-              ))}
+              {filteredItems
+                .filter(item => item.category === 'starters')
+                .map(item => (
+                  <MenuItemCard key={item.id} item={item} />
+                ))}
             </div>
+            {filteredItems.filter(item => item.category === 'starters').length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg">Không tìm thấy món khai vị nào phù hợp.</p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="mains" className="mt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredItems.filter(item => item.category === 'mains').map(item => (
-                <MenuItemCard key={item.id} item={item} />
-              ))}
+              {filteredItems
+                .filter(item => item.category === 'mains')
+                .map(item => (
+                  <MenuItemCard key={item.id} item={item} />
+                ))}
             </div>
+            {filteredItems.filter(item => item.category === 'mains').length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg">Không tìm thấy món chính nào phù hợp.</p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="desserts" className="mt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredItems.filter(item => item.category === 'desserts').map(item => (
-                <MenuItemCard key={item.id} item={item} />
-              ))}
+              {filteredItems
+                .filter(item => item.category === 'desserts')
+                .map(item => (
+                  <MenuItemCard key={item.id} item={item} />
+                ))}
             </div>
+            {filteredItems.filter(item => item.category === 'desserts').length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg">Không tìm thấy món tráng miệng nào phù hợp.</p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="drinks" className="mt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredItems.filter(item => item.category === 'drinks').map(item => (
-                <MenuItemCard key={item.id} item={item} />
-              ))}
+              {filteredItems
+                .filter(item => item.category === 'drinks')
+                .map(item => (
+                  <MenuItemCard key={item.id} item={item} />
+                ))}
             </div>
+            {filteredItems.filter(item => item.category === 'drinks').length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg">Không tìm thấy đồ uống nào phù hợp.</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
 
