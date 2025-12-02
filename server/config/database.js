@@ -15,7 +15,17 @@ let db = null;
 
 export async function connectDatabase() {
   try {
+    if (!MONGODB_URI || MONGODB_URI === 'mongodb://localhost:27017') {
+      const error = new Error('MONGODB_URI is not configured. Please set it in environment variables.');
+      console.error('❌', error.message);
+      throw error;
+    }
+
     if (!client) {
+      console.log('Connecting to MongoDB...', { 
+        uri: MONGODB_URI.replace(/\/\/[^:]+:[^@]+@/, '//***:***@'), // Hide credentials
+        database: DATABASE_NAME 
+      });
       client = new MongoClient(MONGODB_URI);
       await client.connect();
       console.log('✅ Đã kết nối MongoDB thành công');
@@ -28,6 +38,11 @@ export async function connectDatabase() {
     return db;
   } catch (error) {
     console.error('❌ Lỗi kết nối MongoDB:', error);
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      code: error.code
+    });
     throw error;
   }
 }

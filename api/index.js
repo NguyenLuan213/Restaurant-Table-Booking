@@ -129,9 +129,20 @@ export default async function handler(req, res) {
     return app(req, res);
   } catch (error) {
     console.error('Handler error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Environment check:', {
+      hasMongoUri: !!process.env.MONGODB_URI,
+      hasDatabaseName: !!process.env.DATABASE_NAME,
+      nodeEnv: process.env.NODE_ENV,
+      vercel: process.env.VERCEL
+    });
+    
+    // Return detailed error in development, generic in production
+    const isDev = process.env.NODE_ENV !== 'production';
     return res.status(500).json({ 
       error: 'Internal server error',
-      message: error.message 
+      message: isDev ? error.message : 'An error occurred',
+      ...(isDev && { stack: error.stack })
     });
   }
 }
