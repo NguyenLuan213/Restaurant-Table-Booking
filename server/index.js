@@ -182,36 +182,59 @@ app.use((req, res) => {
   });
 });
 
-// Start server
-async function startServer() {
-  try {
-    // Kết nối database
-    await connectDatabase();
-    
-    // Start server
-    app.listen(PORT, () => {
-      console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
-      console.log(`🔗 API Base: http://localhost:${PORT}/api`);
-    });
-  } catch (error) {
-    console.error('❌ Không thể khởi động server:', error);
-    process.exit(1);
+// Initialize database connection
+let dbInitialized = false;
+async function initializeDatabase() {
+  if (!dbInitialized) {
+    try {
+      await connectDatabase();
+      dbInitialized = true;
+      console.log('✅ Database connected');
+    } catch (error) {
+      console.error('❌ Database connection error:', error);
+      throw error;
+    }
   }
 }
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  console.log('\n🛑 Đang tắt server...');
-  await closeDatabase();
-  process.exit(0);
-});
+// Initialize database on module load (for Vercel serverless)
+initializeDatabase().catch(console.error);
 
-process.on('SIGTERM', async () => {
-  console.log('\n🛑 Đang tắt server...');
-  await closeDatabase();
-  process.exit(0);
-});
+// Start server only if not in serverless environment
+if (process.env.VERCEL !== '1') {
+  async function startServer() {
+    try {
+      // Kết nối database
+      await connectDatabase();
+      
+      // Start server
+      app.listen(PORT, () => {
+        console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
+        console.log(`📊 Health check: http://localhost:${PORT}/health`);
+        console.log(`🔗 API Base: http://localhost:${PORT}/api`);
+      });
+    } catch (error) {
+      console.error('❌ Không thể khởi động server:', error);
+      process.exit(1);
+    }
+  }
 
-startServer();
+  // Graceful shutdown
+  process.on('SIGINT', async () => {
+    console.log('\n🛑 Đang tắt server...');
+    await closeDatabase();
+    process.exit(0);
+  });
+
+  process.on('SIGTERM', async () => {
+    console.log('\n🛑 Đang tắt server...');
+    await closeDatabase();
+    process.exit(0);
+  });
+
+  startServer();
+}
+
+// Export app for Vercel serverless functions
+export default app;
 
