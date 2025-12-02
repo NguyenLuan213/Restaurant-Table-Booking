@@ -1,6 +1,10 @@
 const sanitizeBaseUrl = (url: string) => url.replace(/\/+$/, '');
 
-const API_BASE_URL = sanitizeBaseUrl(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000');
+// Use relative path in production (same domain), absolute URL in development
+const isProduction = import.meta.env.PROD;
+const API_BASE_URL = isProduction 
+  ? '' // Use relative path when deployed (same domain)
+  : sanitizeBaseUrl(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000');
 const API_PREFIX = sanitizeBaseUrl(import.meta.env.VITE_API_PREFIX || '/api');
 
 export const API_CONFIG = {
