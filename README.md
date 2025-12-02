@@ -1,54 +1,54 @@
-# Aura Dining – Hệ thống Đặt Bàn Nhà Hàng
+# Aura Dining – Restaurant Table Booking System
 
-Website đặt bàn và quản trị nhà hàng: trải nghiệm người dùng bằng React + Vite, backend Node.js/Express + MongoDB, toàn bộ giao diện tiếng Việt.
+A restaurant table booking and management website: React + Vite frontend, Node.js/Express + MongoDB backend, with Vietnamese user interface.
 
-## 1. Tính năng nổi bật
-- Đặt bàn online (chọn ngày/giờ, sở thích chỗ ngồi, xuất CSV).
-- Quy trình chọn bàn chi tiết, phân bàn tự động/manual trong trang Admin.
-- Khu vực admin có đăng nhập bảo vệ (JWT + MongoDB), tự động hết hạn sau 8 giờ.
-- Quản lý thực đơn, bàn, phân công bàn, phân tích số liệu, cài đặt nhà hàng.
-- Backend riêng với MongoDB, hỗ trợ gửi email xác nhận (SMTP tùy chọn).
+## 1. Key Features
+- Online table booking (select date/time, seating preferences, CSV export).
+- Detailed table selection process, automatic/manual table assignment in Admin panel.
+- Protected admin area with JWT + MongoDB authentication, auto-expires after 8 hours.
+- Menu management, table management, table assignments, analytics, restaurant settings.
+- Separate backend with MongoDB, supports email confirmation (optional SMTP).
 
-## 2. Kiến trúc
+## 2. Architecture
 ```
 Restaurant-Table-Booking/
 ├─ src/               # Frontend React (Vite)
 ├─ server/            # Backend Express + MongoDB
-└─ public/            # Assets tĩnh
+└─ public/            # Static assets
 ```
 
-## 3. Cài đặt & chạy
+## 3. Installation & Setup
 
-### Yêu cầu hệ thống
-- Node.js (phiên bản 18 trở lên)
-- MongoDB (đang chạy local hoặc connection string)
-- npm hoặc yarn
+### System Requirements
+- Node.js (version 18 or higher)
+- MongoDB (running locally or connection string)
+- npm or yarn
 
-### Bước 1: Clone và cài đặt dependencies
+### Step 1: Clone and Install Dependencies
 
 ```bash
-# Clone repository (nếu chưa có)
+# Clone repository (if not already cloned)
 cd Restaurant-Table-Booking
 
-# Cài đặt dependencies cho frontend
+# Install frontend dependencies
 npm install
 
-# Cài đặt dependencies cho backend
+# Install backend dependencies
 cd server
 npm install
 cd ..
 ```
 
-### Bước 2: Tạo file .env ở root dự án
+### Step 2: Create .env File at Project Root
 
-Tạo file `.env` ở **root dự án** (cùng cấp với `package.json`), chứa tất cả biến môi trường:
+Create a `.env` file at the **project root** (same level as `package.json`), containing all environment variables:
 
 ```bash
-# Tạo file .env ở root
+# Create .env file at root
 touch .env
 ```
 
-Nội dung file `.env`:
+Contents of `.env` file:
 
 ```env
 # Server Configuration
@@ -62,7 +62,7 @@ DATABASE_NAME=restaurant_db
 # JWT Secret (for authentication)
 JWT_SECRET=your-secret-key-change-this-in-production
 
-# SMTP Email Configuration (tùy chọn)
+# SMTP Email Configuration (optional)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
@@ -70,28 +70,28 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
 EMAIL_FROM=your-email@gmail.com
 
-# Frontend Vite Environment Variables (tùy chọn)
+# Frontend Vite Environment Variables (optional)
 VITE_API_BASE_URL=http://localhost:5000
 VITE_API_PREFIX=/api
 ```
 
-**Lưu ý quan trọng:**
-- File `.env` phải ở **root dự án** (không phải trong thư mục `server/`)
-- Thay đổi `JWT_SECRET` thành một chuỗi bí mật ngẫu nhiên trong môi trường production
-- Nếu không cấu hình SMTP, hệ thống vẫn hoạt động nhưng không gửi email xác nhận
+**Important Notes:**
+- The `.env` file must be at the **project root** (not in the `server/` directory)
+- Change `JWT_SECRET` to a random secret string in production environment
+- If SMTP is not configured, the system will still work but won't send confirmation emails
 
-### Bước 3: Khởi động MongoDB
+### Step 3: Start MongoDB
 
-Đảm bảo MongoDB đang chạy:
+Ensure MongoDB is running:
 
 ```bash
-# Nếu dùng MongoDB local
+# If using local MongoDB
 mongod
 
-# Hoặc nếu dùng MongoDB Atlas, chỉ cần có connection string trong MONGODB_URI
+# Or if using MongoDB Atlas, just provide the connection string in MONGODB_URI
 ```
 
-### Bước 4: Seed dữ liệu mẫu (lần đầu tiên)
+### Step 4: Seed Sample Data (First Time Only)
 
 ```bash
 cd server
@@ -100,80 +100,79 @@ npm run indexes
 cd ..
 ```
 
-Lệnh này sẽ tạo:
-- Dữ liệu mẫu: bàn, món ăn, cài đặt nhà hàng
-- Tài khoản admin mặc định (xem phần đăng nhập bên dưới)
-- Indexes cho MongoDB để tối ưu hiệu suất
+This will create:
+- Sample data: tables, menu items, restaurant settings
+- Default admin account (see login section below)
+- MongoDB indexes for performance optimization
 
-### Bước 5: Chạy Backend
+### Step 5: Run Backend
 
-Mở terminal thứ nhất:
+Open first terminal:
 
 ```bash
 cd server
 npm run dev
 ```
 
-Backend sẽ chạy tại `http://localhost:5000`
+Backend will run at `http://localhost:5000`
 
-### Bước 6: Chạy Frontend
+### Step 6: Run Frontend
 
-Mở terminal thứ hai:
+Open second terminal:
 
 ```bash
-# Ở root dự án
+# At project root
 npm run dev
 ```
 
-Frontend sẽ chạy tại `http://localhost:3000` (Vite tự động đổi port nếu bận)
+Frontend will run at `http://localhost:3000` (Vite automatically changes port if busy)
 
-### Kiểm tra hoạt động
+### Verify Setup
 
-1. **Backend health check:** Mở trình duyệt vào `http://localhost:5000/health`
-2. **Frontend:** Mở trình duyệt vào `http://localhost:3000`
+1. **Backend health check:** Open browser to `http://localhost:5000/health`
+2. **Frontend:** Open browser to `http://localhost:3000`
 3. **Admin panel:** `http://localhost:3000/admin/login`
 
-## 4. Đăng nhập khu vực Admin
+## 4. Admin Login
 
-Sau khi chạy `npm run seed`, hệ thống tạo tài khoản admin mặc định:
+After running `npm run seed`, the system creates a default admin account:
 
 - **Email:** `admin@auradining.vn`
-- **Mật khẩu:** `123456`
+- **Password:** `123456`
 
-**Cách đăng nhập:**
-1. Truy cập `http://localhost:3000/admin/login`
-2. Nhập email và mật khẩu ở trên
-3. Sau khi đăng nhập thành công, bạn sẽ được chuyển vào bảng điều khiển
-4. Token được lưu trong LocalStorage (hết hạn sau 8 giờ hoặc khi đăng xuất)
+**How to login:**
+1. Navigate to `http://localhost:3000/admin/login`
+2. Enter the email and password above
+3. After successful login, you will be redirected to the dashboard
+4. Token is stored in LocalStorage (expires after 8 hours or on logout)
 
-**⚠️ Lưu ý bảo mật:**
-- Hãy đổi mật khẩu ngay khi lên môi trường production
-- Có thể cập nhật mật khẩu bằng cách sửa document trong collection `admin_users` của MongoDB
+**⚠️ Security Note:**
+- Change the password immediately when deploying to production
+- You can update the password by modifying the document in the `admin_users` collection in MongoDB
 
-## 5. Scripts chính
-| Vị trí | Lệnh | Mô tả |
-|-------|------|-------|
+## 5. Main Scripts
+| Location | Command | Description |
+|----------|---------|-------------|
 | `/` | `npm run dev` | Vite dev server |
 | `/` | `npm run build` | Build frontend |
 | `/` | `npm run preview` | Preview build |
 | `/server` | `npm run dev` | Node --watch backend |
-| `/server` | `npm run seed` | Seed dữ liệu mẫu MongoDB (bàn, món, settings & tài khoản admin) |
-| `/server` | `npm run indexes` | Tạo index MongoDB |
+| `/server` | `npm run seed` | Seed sample MongoDB data (tables, menu, settings & admin account) |
+| `/server` | `npm run indexes` | Create MongoDB indexes |
 
-## 6. Gửi email xác nhận
-Backend dùng `nodemailer`. Nếu không cấu hình SMTP, hệ thống vẫn hoạt động nhưng không gửi email. Khi cấu hình đầy đủ biến môi trường (xem phần backend), mỗi lần đặt bàn thành công sẽ gửi mail “Aura Dining” tới khách.
+## 6. Email Confirmation
+The backend uses `nodemailer`. If SMTP is not configured, the system will still work but won't send emails. When all environment variables are properly configured (see backend section), each successful booking will send an "Aura Dining" confirmation email to the customer.
 
-## 7. Roadmap gợi ý
-- Upload logo chính thức vào `src/assets` và thay cho biểu tượng tạm thời.
-- Thêm trang blog/sự kiện.
-- Triển khai Docker Compose (MongoDB + backend + frontend).
+## 7. Suggested Roadmap
+- Upload official logo to `src/assets` and replace temporary icon.
+- Add blog/events page.
+- Deploy with Docker Compose (MongoDB + backend + frontend).
 
-## 8. Hỗ trợ
-Nếu gặp lỗi:
-1. Kiểm tra log terminal (frontend/backend).
-2. Xác nhận MongoDB đang chạy.
-3. Kiểm tra file `.env` (đúng port, URL).
-4. Xoá `node_modules` và chạy `npm install` lại nếu thiếu dependency (`nodemailer`, v.v.).
+## 8. Support
+If you encounter errors:
+1. Check terminal logs (frontend/backend).
+2. Verify MongoDB is running.
+3. Check `.env` file (correct port, URL).
+4. Delete `node_modules` and run `npm install` again if dependencies are missing (`nodemailer`, etc.).
 
-Chúc bạn vận hành Aura Dining thật thành công! 🍽️🔥
-
+Good luck running Aura Dining! 🍽️🔥
