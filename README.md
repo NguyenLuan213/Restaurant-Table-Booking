@@ -53,6 +53,7 @@ Contents of `.env` file:
 ```env
 # Server Configuration
 PORT=5000
+# For production, use comma-separated origins: http://localhost:3000,https://your-frontend.vercel.app
 CORS_ORIGIN=http://localhost:3000
 
 # MongoDB Configuration
@@ -168,11 +169,44 @@ The backend uses `nodemailer`. If SMTP is not configured, the system will still 
 - Add blog/events page.
 - Deploy with Docker Compose (MongoDB + backend + frontend).
 
-## 8. Support
+## 8. Production Deployment
+
+### Frontend (Vercel)
+1. **Set Environment Variables in Vercel:**
+   - Go to Project Settings → Environment Variables
+   - Add `VITE_API_BASE_URL` = your backend URL (e.g., `https://your-backend.railway.app`)
+   - Add `VITE_API_PREFIX` = `/api`
+   - Redeploy after adding variables
+
+### Backend Deployment Options
+You need to deploy the backend to a service that supports Node.js:
+- **Render** (recommended): Free tier available
+- **Railway**: Easy deployment
+- **Heroku**: Requires credit card
+- **DigitalOcean App Platform**: Paid service
+
+### Backend Environment Variables
+When deploying backend, set these environment variables:
+- `PORT` - Server port (usually auto-assigned)
+- `CORS_ORIGIN` - Comma-separated list: `http://localhost:3000,https://your-frontend.vercel.app`
+- `MONGODB_URI` - MongoDB connection string (use MongoDB Atlas for production)
+- `DATABASE_NAME` - Database name
+- `JWT_SECRET` - Strong secret key for production
+- SMTP variables (if using email)
+
+### CORS Configuration
+The backend now supports multiple origins. Set `CORS_ORIGIN` as comma-separated values:
+```env
+CORS_ORIGIN=http://localhost:3000,https://restaurant-table-booking-seven.vercel.app
+```
+
+## 9. Support
 If you encounter errors:
 1. Check terminal logs (frontend/backend).
 2. Verify MongoDB is running.
 3. Check `.env` file (correct port, URL).
-4. Delete `node_modules` and run `npm install` again if dependencies are missing (`nodemailer`, etc.).
+4. Verify CORS_ORIGIN includes your frontend domain.
+5. Check environment variables in Vercel (for frontend).
+6. Delete `node_modules` and run `npm install` again if dependencies are missing (`nodemailer`, etc.).
 
 Good luck running Aura Dining! 🍽️🔥
