@@ -2,7 +2,7 @@
   "buildCommand": "npm run build && cd server && npm install",
   "outputDirectory": "build",
   "framework": "vite",
-  "installCommand": "npm install",
+  "installCommand": "npm install && cd server && npm install",
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -19,7 +19,8 @@
   ],
   "functions": {
     "api/index.js": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "memory": 1024
     }
   }
 }
