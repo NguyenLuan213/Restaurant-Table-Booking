@@ -60,8 +60,24 @@ app.get('/', (req, res) => {
 });
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Server đang hoạt động' });
+app.get('/health', async (req, res) => {
+  try {
+    const db = getDatabase();
+    // Test database connection
+    await db.admin().ping();
+    res.json({ 
+      status: 'ok', 
+      message: 'Server đang hoạt động',
+      database: 'connected'
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Database connection failed',
+      error: error.message
+    });
+  }
 });
 
 // API Info endpoint
