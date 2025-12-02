@@ -13,7 +13,7 @@ export function verifyAdmin(req, res, next) {
 
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-      console.error('JWT_SECRET chưa được cấu hình trong .env của server');
+      console.error('JWT_SECRET chưa được cấu hình trong file .env');
       return res.status(500).json({ error: 'Cấu hình bảo mật chưa hợp lệ' });
     }
 

@@ -18,50 +18,139 @@ Restaurant-Table-Booking/
 ```
 
 ## 3. Cài đặt & chạy
-### Frontend
-```bash
-cd Restaurant-Table-Booking
-npm install
-cp .env.example .env   # (tự tạo nếu chưa có)
-# .env
-VITE_API_BASE_URL=http://localhost:5000
-VITE_API_PREFIX=/api
-npm run dev
-```
-Frontend chạy tại http://localhost:3000 (Vite auto đổi port nếu bận).
 
-### Backend
+### Yêu cầu hệ thống
+- Node.js (phiên bản 18 trở lên)
+- MongoDB (đang chạy local hoặc connection string)
+- npm hoặc yarn
+
+### Bước 1: Clone và cài đặt dependencies
+
 ```bash
+# Clone repository (nếu chưa có)
+cd Restaurant-Table-Booking
+
+# Cài đặt dependencies cho frontend
+npm install
+
+# Cài đặt dependencies cho backend
 cd server
 npm install
-cp .env.example .env   # hoặc tự tạo
-# ví dụ biến bắt buộc
-MONGODB_URI=mongodb://localhost:27017
-DATABASE_NAME=restaurant_db
+cd ..
+```
+
+### Bước 2: Tạo file .env ở root dự án
+
+Tạo file `.env` ở **root dự án** (cùng cấp với `package.json`), chứa tất cả biến môi trường:
+
+```bash
+# Tạo file .env ở root
+touch .env
+```
+
+Nội dung file `.env`:
+
+```env
+# Server Configuration
 PORT=5000
 CORS_ORIGIN=http://localhost:3000
-JWT_SECRET=change_me_to_a_secure_key
-# SMTP (tuỳ chọn để gửi email)
-SMTP_HOST=smtp.example.com
+
+# MongoDB Configuration
+MONGODB_URI=mongodb://localhost:27017
+DATABASE_NAME=restaurant_db
+
+# JWT Secret (for authentication)
+JWT_SECRET=your-secret-key-change-this-in-production
+
+# SMTP Email Configuration (tùy chọn)
+SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
-SMTP_USER=username
-SMTP_PASS=password
-EMAIL_FROM="Aura Dining" <no-reply@auradining.vn>
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+EMAIL_FROM=your-email@gmail.com
 
-npm run dev            # chạy server
+# Frontend Vite Environment Variables (tùy chọn)
+VITE_API_BASE_URL=http://localhost:5000
+VITE_API_PREFIX=/api
 ```
-Lưu ý: nếu muốn seed dữ liệu mẫu chạy `npm run seed`, tạo index `npm run indexes`.
 
-### Đăng nhập khu vực Admin
-- Sau khi chạy `npm run seed`, hệ thống tạo tài khoản mặc định:
-  - Email: `admin@auradining.vn`
-  - Mật khẩu: `AuraDining@2025`
-- Đăng nhập tại `http://localhost:3000/admin/login`.
-- Sau khi đăng nhập thành công bạn sẽ được chuyển vào bảng điều khiển và token được lưu trong LocalStorage (hết hạn sau 8 giờ hoặc khi đăng xuất).
-- Hãy đổi mật khẩu ngay khi lên môi trường thật bằng cách cập nhật document trong collection `admin_users` (hoặc viết form riêng).
+**Lưu ý quan trọng:**
+- File `.env` phải ở **root dự án** (không phải trong thư mục `server/`)
+- Thay đổi `JWT_SECRET` thành một chuỗi bí mật ngẫu nhiên trong môi trường production
+- Nếu không cấu hình SMTP, hệ thống vẫn hoạt động nhưng không gửi email xác nhận
 
-## 4. Scripts chính
+### Bước 3: Khởi động MongoDB
+
+Đảm bảo MongoDB đang chạy:
+
+```bash
+# Nếu dùng MongoDB local
+mongod
+
+# Hoặc nếu dùng MongoDB Atlas, chỉ cần có connection string trong MONGODB_URI
+```
+
+### Bước 4: Seed dữ liệu mẫu (lần đầu tiên)
+
+```bash
+cd server
+npm run seed
+npm run indexes
+cd ..
+```
+
+Lệnh này sẽ tạo:
+- Dữ liệu mẫu: bàn, món ăn, cài đặt nhà hàng
+- Tài khoản admin mặc định (xem phần đăng nhập bên dưới)
+- Indexes cho MongoDB để tối ưu hiệu suất
+
+### Bước 5: Chạy Backend
+
+Mở terminal thứ nhất:
+
+```bash
+cd server
+npm run dev
+```
+
+Backend sẽ chạy tại `http://localhost:5000`
+
+### Bước 6: Chạy Frontend
+
+Mở terminal thứ hai:
+
+```bash
+# Ở root dự án
+npm run dev
+```
+
+Frontend sẽ chạy tại `http://localhost:3000` (Vite tự động đổi port nếu bận)
+
+### Kiểm tra hoạt động
+
+1. **Backend health check:** Mở trình duyệt vào `http://localhost:5000/health`
+2. **Frontend:** Mở trình duyệt vào `http://localhost:3000`
+3. **Admin panel:** `http://localhost:3000/admin/login`
+
+## 4. Đăng nhập khu vực Admin
+
+Sau khi chạy `npm run seed`, hệ thống tạo tài khoản admin mặc định:
+
+- **Email:** `admin@auradining.vn`
+- **Mật khẩu:** `123456`
+
+**Cách đăng nhập:**
+1. Truy cập `http://localhost:3000/admin/login`
+2. Nhập email và mật khẩu ở trên
+3. Sau khi đăng nhập thành công, bạn sẽ được chuyển vào bảng điều khiển
+4. Token được lưu trong LocalStorage (hết hạn sau 8 giờ hoặc khi đăng xuất)
+
+**⚠️ Lưu ý bảo mật:**
+- Hãy đổi mật khẩu ngay khi lên môi trường production
+- Có thể cập nhật mật khẩu bằng cách sửa document trong collection `admin_users` của MongoDB
+
+## 5. Scripts chính
 | Vị trí | Lệnh | Mô tả |
 |-------|------|-------|
 | `/` | `npm run dev` | Vite dev server |
@@ -71,15 +160,15 @@ Lưu ý: nếu muốn seed dữ liệu mẫu chạy `npm run seed`, tạo index 
 | `/server` | `npm run seed` | Seed dữ liệu mẫu MongoDB (bàn, món, settings & tài khoản admin) |
 | `/server` | `npm run indexes` | Tạo index MongoDB |
 
-## 5. Gửi email xác nhận
+## 6. Gửi email xác nhận
 Backend dùng `nodemailer`. Nếu không cấu hình SMTP, hệ thống vẫn hoạt động nhưng không gửi email. Khi cấu hình đầy đủ biến môi trường (xem phần backend), mỗi lần đặt bàn thành công sẽ gửi mail “Aura Dining” tới khách.
 
-## 6. Roadmap gợi ý
+## 7. Roadmap gợi ý
 - Upload logo chính thức vào `src/assets` và thay cho biểu tượng tạm thời.
 - Thêm trang blog/sự kiện.
 - Triển khai Docker Compose (MongoDB + backend + frontend).
 
-## 7. Hỗ trợ
+## 8. Hỗ trợ
 Nếu gặp lỗi:
 1. Kiểm tra log terminal (frontend/backend).
 2. Xác nhận MongoDB đang chạy.

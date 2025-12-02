@@ -1,8 +1,12 @@
 import { connectDatabase } from '../config/database.js';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '..', '..', '.env') });
 
 // Dữ liệu mẫu để seed
 const sampleTables = [
