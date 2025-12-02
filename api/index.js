@@ -122,28 +122,52 @@ async function ensureDatabase() {
 // Vercel serverless function handler
 export default async function handler(req, res) {
   try {
+    // Log request for debugging
+    console.log('Request received:', {
+      method: req.method,
+      path: req.url,
+      hasMongoUri: !!process.env.MONGODB_URI,
+      hasDatabaseName: !!process.env.DATABASE_NAME
+    });
+
     // Ensure database is connected
     await ensureDatabase();
     
     // Handle request with Express app
-    return app(req, res);
+    // Wrap in Promise to handle async properly
+    return new Promise((resolve, reject) => {
+      app(req, res, (err) => {
+        if (err) {
+          console.error('Express error:', err);
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
   } catch (error) {
     console.error('Handler error:', error);
     console.error('Error stack:', error.stack);
     console.error('Environment check:', {
       hasMongoUri: !!process.env.MONGODB_URI,
       hasDatabaseName: !!process.env.DATABASE_NAME,
+      mongoUriPreview: process.env.MONGODB_URI ? 
+        process.env.MONGODB_URI.substring(0, 20) + '...' : 'NOT SET',
       nodeEnv: process.env.NODE_ENV,
       vercel: process.env.VERCEL
     });
     
-    // Return detailed error in development, generic in production
-    const isDev = process.env.NODE_ENV !== 'production';
-    return res.status(500).json({ 
-      error: 'Internal server error',
-      message: isDev ? error.message : 'An error occurred',
-      ...(isDev && { stack: error.stack })
-    });
+    // Return detailed error
+    if (!res.headersSent) {
+      return res.status(500).json({ 
+        error: 'Internal server error',
+        message: error.message,
+        details: process.env.NODE_ENV !== 'production' ? {
+          stack: error.stack,
+          hasMongoUri: !!process.env.MONGODB_URI
+        } : undefined
+      });
+    }
   }
 }
 

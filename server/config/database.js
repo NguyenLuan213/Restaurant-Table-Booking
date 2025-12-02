@@ -3,9 +3,14 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '..', '..', '.env') });
+// In Vercel serverless, we don't need to load .env file
+// Environment variables are already available via process.env
+// Only load .env in local development
+if (process.env.VERCEL !== '1') {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  dotenv.config({ path: path.resolve(__dirname, '..', '..', '.env') });
+}
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 const DATABASE_NAME = process.env.DATABASE_NAME || 'restaurant_db';
