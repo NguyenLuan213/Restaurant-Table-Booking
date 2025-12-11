@@ -85,6 +85,36 @@ export async function sendBookingConfirmationEmail(booking) {
       subject,
       html,
     });
+
+    // Notify admin about the new booking if ADMIN_EMAIL is configured
+    if (process.env.ADMIN_EMAIL) {
+      const adminSubject = `New booking: ${date} ${time} - ${name}`;
+      const adminHtml = `
+        <h3>New booking received</h3>
+        <ul>
+          <li><strong>Name:</strong> ${name}</li>
+          <li><strong>Email:</strong> ${email}</li>
+          <li><strong>Phone:</strong> ${phone}</li>
+          <li><strong>Date:</strong> ${date}</li>
+          <li><strong>Time:</strong> ${time}</li>
+          <li><strong>Guests:</strong> ${guests}</li>
+          <li><strong>Preference:</strong> ${preferenceLabel}</li>
+          ${tableNumber ? `<li><strong>Table:</strong> ${tableNumber}</li>` : ''}
+          <li><strong>Booking ID:</strong> ${bookingId}</li>
+        </ul>
+      `;
+
+      try {
+        await transporter.sendMail({
+          from: process.env.EMAIL_FROM,
+          to: process.env.ADMIN_EMAIL,
+          subject: adminSubject,
+          html: adminHtml,
+        });
+      } catch (error) {
+        console.error('[Email] Failed to send admin notification email', error);
+      }
+    }
   } catch (error) {
     console.error('[Email] Failed to send confirmation email', error);
   }
